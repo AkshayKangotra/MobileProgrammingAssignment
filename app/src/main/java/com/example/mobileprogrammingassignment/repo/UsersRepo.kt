@@ -12,6 +12,7 @@ import com.example.mobileprogrammingassignment.utils.Event
 import com.example.mobileprogrammingassignment.utils.NetworkHelper
 import com.example.mobileprogrammingassignment.utils.Resource
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 
@@ -20,15 +21,9 @@ class UsersRepo @Inject constructor(
     var networkHelper: NetworkHelper,
     var database: DatabaseBuilder
 ) {
-
-
     private val _getUsers = MutableLiveData<Event<Resource<UsersResponse>>>()
     val getUsers: LiveData<Event<Resource<UsersResponse>>>
         get() = _getUsers
-
-    private val _getUsersFromDB = MutableLiveData<Event<Resource<List<UserDataEt>>>>()
-    val getUsersFromDB: LiveData<Event<Resource<List<UserDataEt>>>>
-        get() = _getUsersFromDB
 
 
     suspend fun getUsersData() {
@@ -68,23 +63,6 @@ class UsersRepo @Inject constructor(
                 )
             )
         }
-    }
-
-    suspend fun getUsersDataFromDB() {
-        _getUsersFromDB.postValue(Event(Resource.loading(ApiConstant.GET_USERS, null)))
-        val job = GlobalScope.async {
-            database.usersDao()!!.getOfflineUsers()
-        }
-        val usersList = job.await()
-        _getUsersFromDB.postValue(
-            Event(
-                Resource.success(
-                    ApiConstant.GET_USERS,
-                    usersList
-                )
-            )
-        )
-        job.cancel()
     }
 
     suspend fun insertUsersInDB(usersEntityList: List<UserDataEt>) {

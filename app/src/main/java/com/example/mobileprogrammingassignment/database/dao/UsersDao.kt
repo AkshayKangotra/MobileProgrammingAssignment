@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.mobileprogrammingassignment.database.entity.UserDataEt
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UsersDao {
@@ -12,5 +13,5 @@ interface UsersDao {
     suspend fun insertAll(userDataEt: List<UserDataEt>)
 
     @Query("SELECT * FROM users")
-    fun getOfflineUsers(): List<UserDataEt>
+    fun getOfflineUsers(): Flow<List<UserDataEt>>
 }

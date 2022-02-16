@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.viewModels
 import androidx.lifecycle.ViewModelProviders
 import com.example.mobileprogrammingassignment.viewmodel.UsersViewModel
 import javax.inject.Inject
@@ -19,16 +18,20 @@ import com.example.mobileprogrammingassignment.viewmodel.UsersVMFactory
 import com.pinkdot.app.presentation.views.RetailUserVendorPostAd.adapter.UsersDetailViewAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.recyclerview.widget.DividerItemDecoration
-
-
-
+import com.example.mobileprogrammingassignment.database.DatabaseBuilder
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private lateinit var job: Job
     private lateinit var usersResponse: UsersResponse
 
+    /*Dependecy Injection*/
     @Inject
     lateinit var repo: UsersRepo
+    @Inject
+    lateinit var databaseBuilder: DatabaseBuilder
     private lateinit var viewModel: UsersViewModel
     lateinit var showProgressInt: ProgressDialog
     private lateinit var binding: ActivityMainBinding
@@ -44,18 +47,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        viewModel = ViewModelProviders.of(this, UsersVMFactory(repo))[UsersViewModel::class.java]
+        viewModel = ViewModelProviders.of(this, UsersVMFactory(repo,databaseBuilder))[UsersViewModel::class.java]
         showProgressInt = ProgressDialog(this)
-        getDataFromDatabase()
+        job=GlobalScope.launch(Dispatchers.Main){
+            getDataFromDatabase()
+        }
     }
 
-    private fun getDataFromDatabase() {
-      viewModel.getUsersDataDB().observe(this, EventObserver{
-          handleApiCallback(it)
-       })
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
+
+    /*Used Flow To Get The Users From Local Storage*/
+    suspend fun getDataFromDatabase() {
+        viewModel.getUsersFromDB().collect {
+            setDbUsersInList(it)
+        }
         viewModel.getUsersFromDB()
     }
 
+    /*Used LiveData To Get The Users From Local Storage*/
     private fun setObservers() {
         viewModel.getUsersData().observe(this, EventObserver {
             handleApiCallback(it)
@@ -70,22 +82,10 @@ class MainActivity : AppCompatActivity() {
                 showProgressInt.hideProgress()
                 when (apiResponse.apiConstant) {
                     ApiConstant.GET_USERS -> {
-                        if(isApiHit) {
                             dataList = ArrayList()
                             usersResponse = apiResponse.data as UsersResponse
                             dataList = usersResponse.data
                             setAdapter()
-                        }else{
-                            usersEntityList = ArrayList()
-                            usersEntityList = apiResponse.data as ArrayList<UserDataEt>
-                            if (usersEntityList.isNullOrEmpty()){
-                                if (networkHelper.isNetworkConnected())
-                                    setObservers()
-                                else
-                                    showToast(this,"Please connect to internet so we can sync users for offline mode")
-                            }
-                            setDataToAdapter()
-                        }
                     }
                 }
             }
@@ -104,6 +104,17 @@ class MainActivity : AppCompatActivity() {
                 showToast(this, getString(apiResponse.resourceId!!))
             }
         }
+    }
+
+    private fun setDbUsersInList(list: List<UserDataEt>) {
+        usersEntityList = list as ArrayList<UserDataEt>
+        if (usersEntityList.isNullOrEmpty()){
+            if (networkHelper.isNetworkConnected())
+                setObservers()
+            else
+                showToast(this,"Please connect to internet so we can sync users for offline mode")
+        }
+        setDataToAdapter()
     }
 
     private fun insertInDb(usersEntityList: List<UserDataEt>) {
