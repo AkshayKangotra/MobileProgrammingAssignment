@@ -2,13 +2,14 @@ package com.example.mobileprogrammingassignment.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.mobileprogrammingassignment.database.entity.UserDataEt
 
 @Dao
 interface UsersDao {
-    @Insert
-    suspend fun insertAll(userDataEt: List<UserDataEt>):Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(userDataEt: List<UserDataEt>)
 
     @Query("SELECT * FROM users")
     fun getOfflineUsers(): List<UserDataEt>

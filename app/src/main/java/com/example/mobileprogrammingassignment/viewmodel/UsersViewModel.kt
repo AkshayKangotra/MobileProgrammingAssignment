@@ -6,9 +6,9 @@ import com.example.mobileprogrammingassignment.repo.UsersRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.lang.IllegalArgumentException
+import androidx.lifecycle.ViewModel
 import javax.inject.Inject
 
-@HiltViewModel
 class UsersViewModel @Inject constructor(val repo: UsersRepo) : ViewModel() {
 
     fun getUsers() {

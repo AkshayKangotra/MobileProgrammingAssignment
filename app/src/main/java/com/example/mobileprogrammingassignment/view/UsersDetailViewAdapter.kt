@@ -1,6 +1,5 @@
 package com.pinkdot.app.presentation.views.RetailUserVendorPostAd.adapter
 
-import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import android.view.LayoutInflater

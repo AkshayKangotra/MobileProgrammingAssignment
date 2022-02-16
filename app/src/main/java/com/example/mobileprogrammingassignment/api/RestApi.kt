@@ -8,5 +8,5 @@ import retrofit2.http.GET
 interface RestApi {
 
     @GET(ApiConstant.GET_USERS)
-    suspend fun getUsers(): Response<List<UsersResponse>>
+    suspend fun getUsers(): Response<UsersResponse>
 }
