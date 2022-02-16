@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MobileProgrammingAssignment</string>
+    <string name="err_no_network_available">No network available</string>
+</resources>
